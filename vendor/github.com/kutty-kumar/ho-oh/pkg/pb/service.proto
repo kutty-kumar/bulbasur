@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package service;
+
+import "google/protobuf/empty.proto";
+
+
+enum Gender {
+    unknown_gender = 0;
+    male = 1;
+    female = 2;
+}
+
+enum Status {
+    unknown_status = 0;
+    active = 1;
+    inactive = 2;
+}
+
+enum TimeUnit {
+    unknown_time_unit = 0;
+    second = 2;
+    millisecond = 1;
+    minute = 3;
+    hour = 4;
+    day = 5;
+    week = 6;
+    month = 7;
+    year = 8;
+}
