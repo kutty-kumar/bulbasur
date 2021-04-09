@@ -1,9 +1,9 @@
 package entity
 
 import (
-	"bulbasur/pkg/pb"
 	"database/sql"
 	"github.com/kutty-kumar/db_commons/model"
+	"github.com/kutty-kumar/ho_oh/bulbasur_v1"
 )
 
 type AuthTokenAttribute struct {
@@ -18,7 +18,7 @@ func (a *AuthTokenAttribute) GetName() db_commons.DomainName {
 }
 
 func (a *AuthTokenAttribute) ToDto() interface{} {
-	return pb.AuthTokenAttributeDto{
+	return bulbasur_v1.AuthTokenAttributeDto{
 		AuthTokenId: a.AuthTokenID,
 		Value: a.value,
 		Key: a.Key,
@@ -26,7 +26,7 @@ func (a *AuthTokenAttribute) ToDto() interface{} {
 }
 
 func (a *AuthTokenAttribute) FillProperties(dto interface{}) db_commons.Base {
-	atAttrDto := dto.(*pb.AuthTokenAttributeDto)
+	atAttrDto := dto.(*bulbasur_v1.AuthTokenAttributeDto)
 	if atAttrDto.Key != ""{
 		a.Key = atAttrDto.Key
 	}

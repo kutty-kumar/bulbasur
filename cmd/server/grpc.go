@@ -2,15 +2,19 @@ package main
 
 import (
 	"github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
 	"github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/infobloxopen/atlas-app-toolkit/gateway"
-	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
-	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
 	"github.com/infobloxopen/atlas-app-toolkit/requestid"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/kutty-kumar/ho_oh/pikachu_v1"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
+	"time"
 )
 
 func NewGRPCServer(logger *logrus.Logger, dbConnectionString string) (*grpc.Server, error){
@@ -43,16 +47,18 @@ func NewGRPCServer(logger *logrus.Logger, dbConnectionString string) (*grpc.Serv
 	)
 	
 	// create new postgres database
-	db, err := gorm.Open("postgres", dbConnectionString)
+	_, err := gorm.Open("postgres", dbConnectionString)
 	if err != nil {
 		return nil, err
 	}
 	// register service implementation with the grpcServer
-	s, err := svc.NewBasicServer(db)
+	userSvcConn, err := grpc.Dial(":9090", grpc.WithInsecure())
 	if err != nil {
-		return nil, err
+		logger.Fatalf("An error %v occurred while instantiating connection with user service", err)
 	}
-	pb.RegisterBulbasurServer(grpcServer, s)
+	defer userSvcConn.Close()
+
+	userSvc := pikachu_v1.NewUserServiceClient(userSvcConn)
 
 	return grpcServer, nil
 }

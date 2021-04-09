@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
-	"flag"
+	_ "flag"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"log"
@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/grpc-ecosystem/go-grpc-middleware"
-	"github.com/grpc-ecosystem/go-grpc-middleware/validator"
+	_ "github.com/grpc-ecosystem/go-grpc-middleware"
+	_ "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
@@ -27,7 +27,7 @@ import (
 
 	"github.com/infobloxopen/atlas-app-toolkit/gorm/resource"
 	"github.com/infobloxopen/atlas-app-toolkit/health"
-	_ "github.com/kutty-kumar/ho-oh/pkg/pb"
+	"github.com/kutty-kumar/ho_oh/bulbasur_v1"
 )
 
 func main() {
@@ -123,7 +123,7 @@ func ServeExternal(logger *logrus.Logger) error {
 					requestid.DefaultRequestIDKey)),
 			),
 			gateway.WithServerAddress(fmt.Sprintf("%s:%s", viper.GetString("server.address"), viper.GetString("server.port"))),
-			gateway.WithEndpointRegistration(viper.GetString("gateway.endpoint"), pb.RegisterBulbasurHandlerFromEndpoint),
+			gateway.WithEndpointRegistration(viper.GetString("gateway.endpoint"), bulbasur_v1.RegisterAuthServiceHandlerFromEndpoint),
 		),
 		server.WithHandler("/swagger/", NewSwaggerHandler(viper.GetString("gateway.swaggerFile"))),
 	)

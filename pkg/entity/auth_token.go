@@ -1,15 +1,16 @@
 package entity
 
 import (
-	"bulbasur/pkg/pb"
 	"database/sql"
 	"github.com/kutty-kumar/db_commons/model"
+	"github.com/kutty-kumar/ho_oh/bulbasur_v1"
+	"github.com/kutty-kumar/ho_oh/core_v1"
 )
 
 type AuthToken struct {
 	db_commons.BaseDomain
 	Token          string `gorm:"unique"`
-	ExpiryTimeUnit pb.TimeUnit
+	ExpiryTimeUnit core_v1.TimeUnit
 	ExpiryDuration uint64
 	EntityId       string               `gorm:"index"`
 	Attributes     []AuthTokenAttribute `gorm:"association_foreignkey:ExternalId;foreignkey:AuthTokenID"`
@@ -20,8 +21,8 @@ func (a *AuthToken) GetName() db_commons.DomainName {
 }
 
 func (a *AuthToken) ToDto() interface{} {
-	return pb.AuthTokenDto{
-		Status:         pb.Status(a.Status),
+	return bulbasur_v1.AuthTokenDto{
+		Status:         core_v1.Status(a.Status),
 		Token:          a.Token,
 		EntityId:       a.EntityId,
 		ExpiryTimeUnit: a.ExpiryTimeUnit,
@@ -30,7 +31,7 @@ func (a *AuthToken) ToDto() interface{} {
 }
 
 func (a *AuthToken) FillProperties(dto interface{}) db_commons.Base {
-	authTokenDto := dto.(pb.AuthTokenDto)
+	authTokenDto := dto.(bulbasur_v1.AuthTokenDto)
 	a.ExpiryDuration = authTokenDto.ExpiryDuration
 	a.ExpiryTimeUnit = authTokenDto.ExpiryTimeUnit
 	a.EntityId = authTokenDto.EntityId
