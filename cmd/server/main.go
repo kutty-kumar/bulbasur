@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	_ "flag"
 	"fmt"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"log"
 	"net"
 	"net/http"
@@ -16,18 +15,17 @@ import (
 	_ "github.com/grpc-ecosystem/go-grpc-middleware"
 	_ "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/infobloxopen/atlas-app-toolkit/gateway"
+	"github.com/infobloxopen/atlas-app-toolkit/gorm/resource"
+	"github.com/infobloxopen/atlas-app-toolkit/health"
+	"github.com/infobloxopen/atlas-app-toolkit/requestid"
+	"github.com/infobloxopen/atlas-app-toolkit/server"
+	"github.com/kutty-kumar/ho_oh/bulbasur_v1"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-
-	"github.com/infobloxopen/atlas-app-toolkit/gateway"
-	"github.com/infobloxopen/atlas-app-toolkit/requestid"
-	"github.com/infobloxopen/atlas-app-toolkit/server"
-
-	"github.com/infobloxopen/atlas-app-toolkit/gorm/resource"
-	"github.com/infobloxopen/atlas-app-toolkit/health"
-	"github.com/kutty-kumar/ho_oh/bulbasur_v1"
 )
 
 func main() {

@@ -1,64 +1,104 @@
 package main
 
 import (
-	"github.com/grpc-ecosystem/go-grpc-middleware"
-	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
-	"github.com/grpc-ecosystem/go-grpc-middleware/validator"
+	"bulbasur/pkg/domain/entity"
+	"bulbasur/pkg/repo"
+	"bulbasur/pkg/svc"
+	"log"
+	"os"
+	"time"
+
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
+	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/infobloxopen/atlas-app-toolkit/gateway"
 	"github.com/infobloxopen/atlas-app-toolkit/requestid"
-	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"github.com/kutty-kumar/ho_oh/pikachu_v1"
+	"github.com/kutty-kumar/charminder/pkg"
+	charminder "github.com/kutty-kumar/charminder/pkg"
+	"github.com/kutty-kumar/ho_oh/bulbasur_v1"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
-	"time"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	gLogger "gorm.io/gorm/logger"
 )
 
-func NewGRPCServer(logger *logrus.Logger, dbConnectionString string) (*grpc.Server, error){
+func NewGRPCServer(logger *logrus.Logger, dbConnectionString string) (*grpc.Server, error) {
 	grpcServer := grpc.NewServer(
-	grpc.KeepaliveParams(
-		keepalive.ServerParameters{
-			Time:    time.Duration(viper.GetInt("config.keepalive.time")) * time.Second,
-			Timeout: time.Duration(viper.GetInt("config.keepalive.timeout")) * time.Second,
-		},
-	),
-	grpc.UnaryInterceptor(
-		grpc_middleware.ChainUnaryServer(
-			// logging middleware
-			grpc_logrus.UnaryServerInterceptor(logrus.NewEntry(logger)),
+		grpc.KeepaliveParams(
+			keepalive.ServerParameters{
+				Time:    time.Duration(viper.GetInt("config.keepalive.time")) * time.Second,
+				Timeout: time.Duration(viper.GetInt("config.keepalive.timeout")) * time.Second,
+			},
+		),
+		grpc.UnaryInterceptor(
+			grpc_middleware.ChainUnaryServer(
+				// logging middleware
+				grpc_logrus.UnaryServerInterceptor(logrus.NewEntry(logger)),
 
-			// Request-Id interceptor
-			requestid.UnaryServerInterceptor(),
+				// Request-Id interceptor
+				requestid.UnaryServerInterceptor(),
 
-			
-			// Metrics middleware
-			grpc_prometheus.UnaryServerInterceptor,
+				// Metrics middleware
+				grpc_prometheus.UnaryServerInterceptor,
 
-			// validation middleware
-			grpc_validator.UnaryServerInterceptor(),
+				// validation middleware
+				grpc_validator.UnaryServerInterceptor(),
 
-			// collection operators middleware
-			gateway.UnaryServerInterceptor(),
+				// collection operators middleware
+				gateway.UnaryServerInterceptor(),
 			),
 		),
 	)
-	
-	// create new postgres database
-	_, err := gorm.Open("postgres", dbConnectionString)
+
+	dbLogger := gLogger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		gLogger.Config{
+			SlowThreshold:             time.Second,  // Slow SQL threshold
+			LogLevel:                  gLogger.Info, // Log level
+			IgnoreRecordNotFoundError: true,         // Ignore ErrRecordNotFound error for logger
+			Colorful:                  false,        // Disable color
+		},
+	)
+
+	// register database
+	db, err := gorm.Open(mysql.Open(dbConnectionString), &gorm.Config{Logger: dbLogger})
 	if err != nil {
 		return nil, err
 	}
-	// register service implementation with the grpcServer
-	userSvcConn, err := grpc.Dial(":9090", grpc.WithInsecure())
-	if err != nil {
-		logger.Fatalf("An error %v occurred while instantiating connection with user service", err)
-	}
-	defer userSvcConn.Close()
 
-	userSvc := pikachu_v1.NewUserServiceClient(userSvcConn)
+	createTables(db)
+
+	// register service implementation with the grpcServer
+
+	// register repositories
+	domainFactory := charminder.NewDomainFactory()
+	domainFactory.RegisterMapping("refresh_token", func() charminder.Base {
+		return &entity.RefreshToken{}
+	})
+	dbOption := charminder.WithDb(db)
+	externalIdSetter := func(externalId string, base pkg.Base) pkg.Base {
+		base.SetExternalId(externalId)
+		return base
+	}
+	setterOption := pkg.WithExternalIdSetter(externalIdSetter)
+	refreshTokenGormDao := charminder.NewBaseGORMDao(dbOption, charminder.WithCreator(domainFactory.GetMapping("refresh_token")), setterOption)
+	refreshTokenGormRepo := repo.NewRefreshTokenGORMRepo(refreshTokenGormDao)
+
+	// register services
+	authTokenSvc := svc.NewAuthTokenSvc(&refreshTokenGormRepo)
+	bulbasur_v1.RegisterAuthServiceServer(grpcServer, &authTokenSvc)
 
 	return grpcServer, nil
+}
+
+func createTables(db *gorm.DB) {
+	err := db.AutoMigrate(entity.RefreshToken{})
+	if err != nil {
+		log.Fatalf("An error %v occurred while automigrating", err)
+	}
 }

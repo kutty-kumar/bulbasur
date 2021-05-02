@@ -7,37 +7,36 @@ const (
 
 	// Server
 	defaultServerAddress = "0.0.0.0"
-	defaultServerPort    = "9090"
+	defaultServerPort    = "9123"
 
-	// Gateway 
+	// Gateway
 	defaultGatewayEnable      = true
 	defaultGatewayAddress     = "0.0.0.0"
-	defaultGatewayPort        = "8080"
-	defaultGatewayURL         = "/bulbasur/v1/"
+	defaultGatewayPort        = "9124"
+	defaultGatewayURL         = "/bulbasur/"
 	defaultGatewaySwaggerFile = "pkg/pb/service.swagger.json"
 
-	// Database 
-	defaultDatabaseEnable   = true
-	// DSN example: "postgres://postgres:postgres@postgres:5432/atlas_db?sslmode=disable"
-	defaultDatabaseDSN      = ""
-	defaultDatabaseType     = "postgres"
+	// Database
+	defaultDatabaseEnable = true
+	defaultDatabaseDSN      = "root:@(localhost:3306)/bulbasur?parseTime=true"
+	defaultDatabaseType     = "mysql"
 	defaultDatabaseAddress  = "0.0.0.0"
-	defaultDatabasePort     = "5432"
+	defaultDatabasePort     = "3306"
 	defaultDatabaseName     = "bulbasur"
-	defaultDatabaseUser     = "postgres"
-	defaultDatabasePassword = "postgres"
+	defaultDatabaseUser     = "root"
+	defaultDatabasePassword = ""
 	defaultDatabaseSSL      = "disable"
 	defaultDatabaseOption   = ""
 
 	// PubSub
-	defaultPubsubEnable    =  false
-	defaultPubsubAddress   = "pubsub.atlas"
-	defaultPubsubPort      = "5555"
-	defaultPubsubPublish   = "example_hello"
-	defaultPubsubSubscribe = "example_hello"
+	defaultPubsubEnable       = false
+	defaultPubsubAddress      = "pubsub.atlas"
+	defaultPubsubPort         = "5555"
+	defaultPubsubPublish      = "example_hello"
+	defaultPubsubSubscribe    = "example_hello"
 	defaultPubsubSubscriberID = "example_hello_subscriberid"
 
-	// Authz 
+	// Authz
 	defaultAuthzEnable  = false
 	defaultAuthzAddress = "authz.atlas"
 	defaultAuthzPort    = "5555"
@@ -55,7 +54,7 @@ const (
 	// Health
 	defaultInternalEnable    = true
 	defaultInternalAddress   = "0.0.0.0"
-	defaultInternalPort      = "8081"
+	defaultInternalPort      = "9125"
 	defaultInternalHealth    = "/healthz"
 	defaultInternalReadiness = "/ready"
 
@@ -70,8 +69,6 @@ const (
 
 	// Logging
 	defaultLoggingLevel = "debug"
-
-	
 )
 
 var (
@@ -103,7 +100,6 @@ var (
 	flagPubsubSubscribe    = pflag.String("atlas.pubsub.subscribe", defaultPubsubSubscribe, "subscriber topic")
 	flagPubsubSubscriberID = pflag.String("atlas.pubsub.subscriber.id", defaultPubsubSubscriberID, "subscriber id")
 
-
 	flagAuthzEnable  = pflag.Bool("atlas.authz.enable", defaultAuthzEnable, "enable application with authorization")
 	flagAuthzAddress = pflag.String("atlas.authz.address", defaultAuthzAddress, "address or FQDN of the authorization service")
 	flagAuthzPort    = pflag.String("atlas.authz.port", defaultAuthzPort, "port of the authorization service")
@@ -131,6 +127,4 @@ var (
 	flagKeepaliveTimeout = pflag.Int("config.keepalive.timeout", defaultKeepaliveTimeout, "default value, in seconds, of the keepalive timeout")
 
 	flagLoggingLevel = pflag.String("logging.level", defaultLoggingLevel, "log level of application")
-
-	
 )
