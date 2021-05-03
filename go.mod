@@ -12,9 +12,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/infobloxopen/atlas-app-toolkit v0.24.0
 	github.com/jinzhu/gorm v1.9.16
-	github.com/jinzhu/now v1.1.2 // indirect
 	github.com/kutty-kumar/charminder v0.0.0-20210417173905-a130572e8976
-	github.com/kutty-kumar/db_commons v0.0.0-20210405124335-4b20ae4127b5
 	github.com/kutty-kumar/ho_oh v0.0.0-20210420162329-80eb2d3469b2
 	github.com/prometheus/client_golang v1.10.0
 	github.com/sirupsen/logrus v1.8.1

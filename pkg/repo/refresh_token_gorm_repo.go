@@ -18,8 +18,8 @@ func NewRefreshTokenGORMRepo(dao charminder.BaseDao) RefreshTokenGORMRepo {
 	}
 }
 
-func (rtgr *RefreshTokenGORMRepo) Logout(ctx context.Context, entityId string) error {
-	if err := rtgr.GetDb().Model(entity.RefreshToken{}).Where("entity_id = ?", entityId).Update("status", core_v1.Status_inactive).Error; err != nil {
+func (rtgr *RefreshTokenGORMRepo) Logout(ctx context.Context, token string) error {
+	if err := rtgr.GetDb().Model(entity.RefreshToken{}).Where("token = ?", token).Update("status", core_v1.Status_inactive).Error; err != nil {
 		return err
 	}
 	return nil

@@ -54,7 +54,11 @@ func (ats *AuthTokenSvc) Login(ctx context.Context, req *bulbasur_v1.LoginReques
 
 func (ats *AuthTokenSvc) Logout(ctx context.Context, req *bulbasur_v1.LogoutRequest) (*bulbasur_v1.LogoutResponse, error) {
 	var resp bulbasur_v1.LogoutResponse
-	err := ats.refreshTokenRepo.Logout(ctx, req.EntityId)
+	encodedRefreshToken, err := ats.authHelper.EncryptAES(req.RefreshToken)
+	if err != nil {
+		return nil, errors.New("Invalid refresh token")
+	}
+	err = ats.refreshTokenRepo.Logout(ctx, encodedRefreshToken)
 	if err != nil {
 		return nil, errors.New("Error in logging out user")
 	}

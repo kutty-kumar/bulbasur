@@ -5,7 +5,6 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
-	"fmt"
 	"io"
 	"time"
 
@@ -84,5 +83,5 @@ func (ah *AuthHelper) EncryptAES(text string) (string, error) {
 	}
 	cfb := cipher.NewCFBEncrypter(block, iv)
 	cfb.XORKeyStream(ciphertext[aes.BlockSize:], []byte(b))
-	return fmt.Sprintf("%0x\n", ciphertext), nil
+	return text, nil
 }
