@@ -11,7 +11,7 @@ gateway:
   swaggerFile: ./www/service.swagger.json
 database:
   enable: true
-  dsn: 
+  dsn:
   type: postgres
   address: 0.0.0.0
   port: 5432
@@ -23,7 +23,7 @@ database:
 atlas.pubsub:
   enable: false
   address: atlas.pubsub
-  port: 5555 
+  port: 5555
   publish: topic
   subscribe: topic
 atlas.authz:
@@ -46,6 +46,6 @@ internal:
   readiness: /ready
 config:
   source: deploy
-  secret.file: 
+  secret.file:
 logging:
   level: debug
