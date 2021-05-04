@@ -15,6 +15,5 @@ RUN mkdir -p /lib64 && \
     ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 
 COPY --from=builder /go/src//bulbasur/bin/server .
-COPY pkg/pb/*.swagger.json www/swagger.json
 COPY --from=builder /go/src//bulbasur/db/migrations /db/migrations/
 ENTRYPOINT ["server", "--gateway.swaggerFile", "www/swagger.json"]
