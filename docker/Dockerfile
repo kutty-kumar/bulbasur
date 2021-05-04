@@ -16,4 +16,4 @@ RUN mkdir -p /lib64 && \
 
 COPY --from=builder /go/src//bulbasur/bin/server .
 COPY --from=builder /go/src//bulbasur/db/migrations /db/migrations/
-ENTRYPOINT ["server", "--gateway.swaggerFile", "www/swagger.json"]
+ENTRYPOINT ["server"]

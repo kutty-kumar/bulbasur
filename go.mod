@@ -2,6 +2,9 @@ module bulbasur
 
 go 1.14
 
+replace google.golang.org/grpc v1.37.0 => google.golang.org/grpc v1.29.0
+
+
 require (
 	github.com/dgrijalva/jwt-go v3.2.1-0.20200107013213-dc14462fd587+incompatible
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
@@ -17,7 +20,7 @@ require (
 	github.com/prometheus/client_golang v1.10.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.3.4 // indirect
-	github.com/spf13/pflag v1.0.5
+	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.7.0 // indirect
 	google.golang.org/grpc v1.37.0
