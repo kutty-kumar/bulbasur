@@ -130,7 +130,7 @@ func ServeExternal(logger *logrus.Logger) error {
 				runtime.WithIncomingHeaderMatcher(gateway.ExtendedDefaultHeaderMatcher(
 					requestid.DefaultRequestIDKey)),
 			),
-			gateway.WithServerAddress(fmt.Sprintf("%s:%s", viper.GetString("server_config.gateway_address"), viper.GetString("server_config.gateway_port"))),
+			gateway.WithServerAddress(fmt.Sprintf("%s:%s", viper.GetString("server_config.address"), viper.GetString("server_config.port"))),
 			gateway.WithEndpointRegistration(viper.GetString("server_config.gateway_url"), bulbasur_v1.RegisterAuthServiceHandlerFromEndpoint),
 		),
 		server.WithHandler("/swagger/", NewSwaggerHandler(viper.GetString("server_config.swagger_path"))),

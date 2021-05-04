@@ -92,7 +92,6 @@ func NewGRPCServer(logger *logrus.Logger, userSvcConn *grpc.ClientConn) (*grpc.S
 	userSvc := svc.NewUserSvc(pikachu_v1.NewUserServiceClient(userSvcConn))
 	authTokenSvc := svc.NewAuthTokenSvc(&refreshTokenGormRepo, userSvc)
 	bulbasur_v1.RegisterAuthServiceServer(grpcServer, &authTokenSvc)
-
 	return grpcServer, nil
 }
 

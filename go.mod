@@ -4,7 +4,6 @@ go 1.14
 
 replace google.golang.org/grpc v1.37.0 => google.golang.org/grpc v1.29.0
 
-
 require (
 	github.com/dgrijalva/jwt-go v3.2.1-0.20200107013213-dc14462fd587+incompatible
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
