@@ -4,14 +4,15 @@ import (
 	"bulbasur/pkg/domain/entity"
 	"bulbasur/pkg/repo"
 	"bulbasur/pkg/svc"
+	"github.com/kutty-kumar/ho_oh/pikachu_v1"
 	"log"
 	"os"
 	"time"
 
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
-	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
-	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
+	"github.com/grpc-ecosystem/go-grpc-middleware/validator"
+	"github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/infobloxopen/atlas-app-toolkit/gateway"
 	"github.com/infobloxopen/atlas-app-toolkit/requestid"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
@@ -27,7 +28,7 @@ import (
 	gLogger "gorm.io/gorm/logger"
 )
 
-func NewGRPCServer(logger *logrus.Logger, dbConnectionString string) (*grpc.Server, error) {
+func NewGRPCServer(logger *logrus.Logger, userSvcConn *grpc.ClientConn) (*grpc.Server, error) {
 	grpcServer := grpc.NewServer(
 		grpc.KeepaliveParams(
 			keepalive.ServerParameters{
@@ -66,14 +67,12 @@ func NewGRPCServer(logger *logrus.Logger, dbConnectionString string) (*grpc.Serv
 	)
 
 	// register database
-	db, err := gorm.Open(mysql.Open(dbConnectionString), &gorm.Config{Logger: dbLogger})
+	db, err := gorm.Open(mysql.Open(viper.GetString("database_config.dsn")), &gorm.Config{Logger: dbLogger})
 	if err != nil {
 		return nil, err
 	}
 
 	createTables(db)
-
-	// register service implementation with the grpcServer
 
 	// register repositories
 	domainFactory := charminder.NewDomainFactory()
@@ -90,7 +89,8 @@ func NewGRPCServer(logger *logrus.Logger, dbConnectionString string) (*grpc.Serv
 	refreshTokenGormRepo := repo.NewRefreshTokenGORMRepo(refreshTokenGormDao)
 
 	// register services
-	authTokenSvc := svc.NewAuthTokenSvc(&refreshTokenGormRepo)
+	userSvc := svc.NewUserSvc(pikachu_v1.NewUserServiceClient(userSvcConn))
+	authTokenSvc := svc.NewAuthTokenSvc(&refreshTokenGormRepo, userSvc)
 	bulbasur_v1.RegisterAuthServiceServer(grpcServer, &authTokenSvc)
 
 	return grpcServer, nil

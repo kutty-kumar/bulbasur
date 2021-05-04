@@ -1,130 +1,60 @@
 package main
 
-import "github.com/spf13/pflag"
+import "time"
 
-const (
-	// configuration defaults support local development (i.e. "go run ...")
+type DatabaseConfig struct {
+	HostName     string `json:"host_name"`
+	Port         uint64 `json:"port"`
+	DatabaseName string `json:"database_name"`
+	UserName     string `json:"user_name"`
+	Password     string `json:"password"`
+	Dsn          string `json:"dsn"`
+	Type         string `json:"type"`
+}
 
-	// Server
-	defaultServerAddress = "0.0.0.0"
-	defaultServerPort    = "9123"
+type HeartBeatConfig struct {
+	KeepAliveTime    uint64 `json:"keep_alive_time"`
+	KeepAliveTimeOut uint64 `json:"keep_alive_timeout"`
+}
 
-	// Gateway
-	defaultGatewayEnable      = true
-	defaultGatewayAddress     = "0.0.0.0"
-	defaultGatewayPort        = "9124"
-	defaultGatewayURL         = "/bulbasur/"
-	defaultGatewaySwaggerFile = "pkg/pb/service.swagger.json"
+type ServerConfig struct {
+	Address           string `json:"address"`
+	Port              string `json:"port"`
+	GatewayEnable     bool   `json:"gateway_enable"`
+	GatewayAddress    string `json:"gateway_address"`
+	GatewayURL        string `json:"gateway_url"`
+	GatewayPort       string `json:"gateway_port"`
+	InternalEnable    bool   `json:"internal_enable"`
+	InternalAddress   string `json:"internal_address"`
+	InternalPort      string `json:"internal_port"`
+	InternalHealth    string `json:"internal_health"`
+	InternalReadiness string `json:"internal_readiness"`
+	SwaggerPath       string `json:"swagger_path"`
+}
 
-	// Database
-	defaultDatabaseEnable = true
-	defaultDatabaseDSN      = "root:@(localhost:3306)/bulbasur?parseTime=true"
-	defaultDatabaseType     = "mysql"
-	defaultDatabaseAddress  = "0.0.0.0"
-	defaultDatabasePort     = "3306"
-	defaultDatabaseName     = "bulbasur"
-	defaultDatabaseUser     = "root"
-	defaultDatabasePassword = ""
-	defaultDatabaseSSL      = "disable"
-	defaultDatabaseOption   = ""
+type JwtConfig struct {
+	SecretKey                  string        `json:"secret_key"`
+	CipherKey                  string        `json:"cipher_key"`
+	AccessTokenExpiryDuration  time.Duration `json:"access_token_expiry_duration"`
+	AccessTokenExpiryTimeUnit  time.Duration `json:"access_token_expiry_time_unit"`
+	RefreshTokenExpiryDuration time.Duration `json:"refresh_token_expiry_duration"`
+	RefreshTokenExpiryTimeUnit time.Duration `json:"refresh_token_expiry_time_unit"`
+}
 
-	// PubSub
-	defaultPubsubEnable       = false
-	defaultPubsubAddress      = "pubsub.atlas"
-	defaultPubsubPort         = "5555"
-	defaultPubsubPublish      = "example_hello"
-	defaultPubsubSubscribe    = "example_hello"
-	defaultPubsubSubscriberID = "example_hello_subscriberid"
+type LoggingConfig struct {
+	LogLevel string `json:"log_level"`
+}
 
-	// Authz
-	defaultAuthzEnable  = false
-	defaultAuthzAddress = "authz.atlas"
-	defaultAuthzPort    = "5555"
+type UserServiceConfig struct {
+	ServerAddress string `json:"server_address"`
+	ServerPort    uint64 `json:"server_port"`
+}
 
-	// Audit Logging
-	defaultAuditEnable  = false
-	defaultAuditAddress = "audit.atlas"
-	defaultAuditPort    = "5555"
-
-	// Tagging
-	defaultTaggingEnable  = false
-	defaultTaggingAddress = "tagging.atlas"
-	defaultTaggingPort    = "5555"
-
-	// Health
-	defaultInternalEnable    = true
-	defaultInternalAddress   = "0.0.0.0"
-	defaultInternalPort      = "9125"
-	defaultInternalHealth    = "/healthz"
-	defaultInternalReadiness = "/ready"
-
-	defaultConfigDirectory = "deploy/"
-	defaultConfigFile      = ""
-	defaultSecretFile      = ""
-	defaultApplicationID   = "bulbasur"
-
-	// Heartbeat
-	defaultKeepaliveTime    = 10
-	defaultKeepaliveTimeout = 20
-
-	// Logging
-	defaultLoggingLevel = "debug"
-)
-
-var (
-	// define flag overrides
-	flagServerAddress = pflag.String("server.address", defaultServerAddress, "adress of gRPC server")
-	flagServerPort    = pflag.String("server.port", defaultServerPort, "port of gRPC server")
-
-	flagGatewayEnable      = pflag.Bool("gateway.enable", defaultGatewayEnable, "enable gatway")
-	flagGatewayAddress     = pflag.String("gateway.address", defaultGatewayAddress, "address of gateway server")
-	flagGatewayPort        = pflag.String("gateway.port", defaultGatewayPort, "port of gateway server")
-	flagGatewayURL         = pflag.String("gateway.endpoint", defaultGatewayURL, "endpoint of gateway server")
-	flagGatewaySwaggerFile = pflag.String("gateway.swaggerFile", defaultGatewaySwaggerFile, "directory of swagger.json file")
-
-	flagDatabaseEnable   = pflag.Bool("database.enable", defaultDatabaseEnable, "enable database")
-	flagDatabaseDSN      = pflag.String("database.dsn", defaultDatabaseDSN, "DSN of the database")
-	flagDatabaseType     = pflag.String("database.type", defaultDatabaseType, "type of the database")
-	flagDatabaseAddress  = pflag.String("database.address", defaultDatabaseAddress, "address of the database")
-	flagDatabasePort     = pflag.String("database.port", defaultDatabasePort, "port of the database")
-	flagDatabaseName     = pflag.String("database.name", defaultDatabaseName, "name of the database")
-	flagDatabaseUser     = pflag.String("database.user", defaultDatabaseUser, "database username")
-	flagDatabasePassword = pflag.String("database.password", defaultDatabasePassword, "database password")
-	flagDatabaseSSL      = pflag.String("database.ssl", defaultDatabaseSSL, "database ssl mode")
-	flagDatabaseOption   = pflag.String("database.option", defaultDatabaseOption, "define custom option to db driver")
-
-	flagPubsubEnable       = pflag.Bool("atlas.pubsub.enable", defaultPubsubEnable, "enable application with pubsub")
-	flagPubsubAddress      = pflag.String("atlas.pubsub.address", defaultPubsubAddress, "address or FQDN of the pubsub service")
-	flagPubsubPort         = pflag.String("atlas.pubsub.port", defaultPubsubPort, "port of the pubsub service")
-	flagPubsubPublish      = pflag.String("atlas.pubsub.publish", defaultPubsubPublish, "publisher topic")
-	flagPubsubSubscribe    = pflag.String("atlas.pubsub.subscribe", defaultPubsubSubscribe, "subscriber topic")
-	flagPubsubSubscriberID = pflag.String("atlas.pubsub.subscriber.id", defaultPubsubSubscriberID, "subscriber id")
-
-	flagAuthzEnable  = pflag.Bool("atlas.authz.enable", defaultAuthzEnable, "enable application with authorization")
-	flagAuthzAddress = pflag.String("atlas.authz.address", defaultAuthzAddress, "address or FQDN of the authorization service")
-	flagAuthzPort    = pflag.String("atlas.authz.port", defaultAuthzPort, "port of the authorization service")
-
-	flagAuditEnable  = pflag.Bool("atlas.audit.enable", defaultAuditEnable, "enable logging of gRPC requests on Atlas audit service")
-	flagAuditAddress = pflag.String("atlas.audit.address", defaultAuditAddress, "address or FQDN of Atlas audit log service")
-	flagAuditPort    = pflag.String("atlas.audit.port", defaultAuditPort, "port of Atlas audit log service")
-
-	flagTaggingEnable  = pflag.Bool("atlas.tagging.enable", defaultTaggingEnable, "enable tagging")
-	flagTaggingAddress = pflag.String("atlas.tagging.address", defaultTaggingAddress, "address or FQDN of Atlas tagging service")
-	flagTaggingPort    = pflag.String("atlas.tagging.port", defaultTaggingPort, "port of Atlas tagging service")
-
-	flagInternalEnable    = pflag.Bool("internal.enable", defaultInternalEnable, "enable internal http server")
-	flagInternalAddress   = pflag.String("internal.address", defaultInternalAddress, "address of internal http server")
-	flagInternalPort      = pflag.String("internal.port", defaultInternalPort, "port of internal http server")
-	flagInternalHealth    = pflag.String("internal.health", defaultInternalHealth, "endpoint for health checks")
-	flagInternalReadiness = pflag.String("internal.readiness", defaultInternalReadiness, "endpoint for readiness checks")
-
-	flagConfigDirectory = pflag.String("config.source", defaultConfigDirectory, "directory of the configuration file")
-	flagConfigFile      = pflag.String("config.file", defaultConfigFile, "directory of the configuration file")
-	flagSecretFile      = pflag.String("config.secret.file", defaultSecretFile, "directory of the secrets configuration file")
-	flagApplicationID   = pflag.String("app.id", defaultApplicationID, "identifier for the application")
-
-	flagKeepaliveTime    = pflag.Int("config.keepalive.time", defaultKeepaliveTime, "default value, in seconds, of the keepalive time")
-	flagKeepaliveTimeout = pflag.Int("config.keepalive.timeout", defaultKeepaliveTimeout, "default value, in seconds, of the keepalive timeout")
-
-	flagLoggingLevel = pflag.String("logging.level", defaultLoggingLevel, "log level of application")
-)
+type Config struct {
+	ServerConfig      ServerConfig      `json:"server_config"`
+	DatabaseConfig    DatabaseConfig    `json:"database_config"`
+	HeartBeatConfig   HeartBeatConfig   `json:"heartbeat_config"`
+	JwtConfig         JwtConfig         `json:"jwt_config"`
+	LoggingConfig     LoggingConfig     `json:"logging_config"`
+	UserServiceConfig UserServiceConfig `json:"user_svc_config"`
+}
