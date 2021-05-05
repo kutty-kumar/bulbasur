@@ -19,19 +19,28 @@ type RefreshToken struct {
 	EntityId string `gorm:"index"`
 }
 
-func (r *RefreshToken) ToBytes() (*bytes.Buffer, error) {
-	var rBytes bytes.Buffer
-	enc := gob.NewEncoder(&rBytes)
-	err := enc.Encode(*r)
-	return &rBytes, err
-}
-
 func (r *RefreshToken) ToJson() (string, error) {
 	rBytes, err := json.Marshal(*r)
 	if err != nil {
 		return "{}", err
 	}
 	return string(rBytes), nil
+}
+
+func (r *RefreshToken) MarshalBinary() ([]byte, error) {
+	var rBytes bytes.Buffer
+	enc := gob.NewEncoder(&rBytes)
+	err := enc.Encode(*r)
+	return rBytes.Bytes(), err
+}
+
+func (r *RefreshToken) UnmarshalBinary(data []byte) error {
+	reader := bytes.NewReader(data)
+	dec := gob.NewDecoder(reader)
+	if err := dec.Decode(r); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *RefreshToken) String() string {
