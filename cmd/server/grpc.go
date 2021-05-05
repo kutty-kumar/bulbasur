@@ -1,24 +1,26 @@
 package main
 
 import (
-	"bulbasur/pkg/domain/entity"
-	"bulbasur/pkg/repo"
-	"bulbasur/pkg/svc"
-	"github.com/kutty-kumar/ho_oh/pikachu_v1"
 	"log"
 	"os"
 	"time"
 
-	"github.com/grpc-ecosystem/go-grpc-middleware"
-	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
-	"github.com/grpc-ecosystem/go-grpc-middleware/validator"
-	"github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/kutty-kumar/bulbasur/pkg/domain/entity"
+	"github.com/kutty-kumar/bulbasur/pkg/repo"
+	"github.com/kutty-kumar/bulbasur/pkg/svc"
+	"github.com/kutty-kumar/bulbasur/pkg/svc/external"
+
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
+	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/infobloxopen/atlas-app-toolkit/gateway"
 	"github.com/infobloxopen/atlas-app-toolkit/requestid"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/kutty-kumar/charminder/pkg"
 	charminder "github.com/kutty-kumar/charminder/pkg"
 	"github.com/kutty-kumar/ho_oh/bulbasur_v1"
+	"github.com/kutty-kumar/ho_oh/snorlax_v1"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
@@ -67,7 +69,7 @@ func NewGRPCServer(logger *logrus.Logger, userSvcConn *grpc.ClientConn) (*grpc.S
 	)
 
 	// register database
-	db, err := gorm.Open(mysql.Open(viper.GetString("database_config.dsn")), &gorm.Config{Logger: dbLogger})
+	db, err := gorm.Open(mysql.Open(viper.GetString("database.dsn")), &gorm.Config{Logger: dbLogger})
 	if err != nil {
 		return nil, err
 	}
@@ -86,10 +88,10 @@ func NewGRPCServer(logger *logrus.Logger, userSvcConn *grpc.ClientConn) (*grpc.S
 	}
 	setterOption := pkg.WithExternalIdSetter(externalIdSetter)
 	refreshTokenGormDao := charminder.NewBaseGORMDao(dbOption, charminder.WithCreator(domainFactory.GetMapping("refresh_token")), setterOption)
-	refreshTokenGormRepo := repo.NewRefreshTokenGORMRepo(refreshTokenGormDao)
+	refreshTokenGormRepo := repo.NewRefreshTokenRepoGormImpl(refreshTokenGormDao)
 
 	// register services
-	userSvc := svc.NewUserSvc(pikachu_v1.NewUserServiceClient(userSvcConn))
+	userSvc := external.NewUserSvcImpl(snorlax_v1.NewUserServiceClient(userSvcConn))
 	authTokenSvc := svc.NewAuthTokenSvc(&refreshTokenGormRepo, userSvc)
 	bulbasur_v1.RegisterAuthServiceServer(grpcServer, &authTokenSvc)
 	return grpcServer, nil

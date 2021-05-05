@@ -1,12 +1,13 @@
 package svc
 
 import (
-	"bulbasur/pkg/domain/entity"
-	"bulbasur/pkg/helper"
-	"bulbasur/pkg/repo"
 	"context"
 	"errors"
 
+	"github.com/kutty-kumar/bulbasur/pkg/domain/entity"
+	"github.com/kutty-kumar/bulbasur/pkg/helper"
+	"github.com/kutty-kumar/bulbasur/pkg/repo"
+	"github.com/kutty-kumar/bulbasur/pkg/svc/external"
 	"github.com/kutty-kumar/ho_oh/bulbasur_v1"
 	"github.com/kutty-kumar/ho_oh/core_v1"
 )
@@ -14,10 +15,10 @@ import (
 type AuthTokenSvc struct {
 	authHelper       helper.AuthHelper
 	refreshTokenRepo repo.RefreshTokenRepo
-	userSvc          BaseUserSvc
+	userSvc          external.UserSvc
 }
 
-func NewAuthTokenSvc(refreshTokenRepo repo.RefreshTokenRepo, userSvc BaseUserSvc) AuthTokenSvc {
+func NewAuthTokenSvc(refreshTokenRepo repo.RefreshTokenRepo, userSvc external.UserSvc) AuthTokenSvc {
 	return AuthTokenSvc{
 		refreshTokenRepo: refreshTokenRepo,
 		authHelper:       helper.AuthHelper{},
@@ -27,11 +28,11 @@ func NewAuthTokenSvc(refreshTokenRepo repo.RefreshTokenRepo, userSvc BaseUserSvc
 
 func (ats *AuthTokenSvc) Login(ctx context.Context, req *bulbasur_v1.LoginRequest) (*bulbasur_v1.LoginResponse, error) {
 	var resp bulbasur_v1.LoginResponse
-	user, err := ats.userSvc.GetUserByEmailPassword(req.Email, req.Password)
+	user, err := ats.userSvc.GetUserByEmailPassword(ctx, req.Email, req.Password)
 	if err != nil {
 		return nil, errors.New("invalid credentials")
 	}
-	keyPair, err := ats.authHelper.GenerateAccessRefreshKeyPair(user.ExternalId)
+	keyPair, err := ats.authHelper.GenerateAccessRefreshKeyPair(user.UserId)
 	if err != nil {
 		return nil, errors.New("error in generating tokens")
 	}
@@ -43,7 +44,7 @@ func (ats *AuthTokenSvc) Login(ctx context.Context, req *bulbasur_v1.LoginReques
 		Token:        keyPair["access_token"],
 		Status:       core_v1.Status_active,
 		RefreshToken: keyPair["refresh_token"],
-		EntityId:     user.ExternalId,
+		EntityId:     user.UserId,
 	}
 	refreshToken := entity.RefreshToken{}
 	refreshToken.FillProperties(*resp.Response)

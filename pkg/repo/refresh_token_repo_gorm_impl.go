@@ -1,31 +1,32 @@
 package repo
 
 import (
-	"bulbasur/pkg/domain/entity"
 	"context"
+
+	"github.com/kutty-kumar/bulbasur/pkg/domain/entity"
 
 	charminder "github.com/kutty-kumar/charminder/pkg"
 	"github.com/kutty-kumar/ho_oh/core_v1"
 )
 
-type RefreshTokenGORMRepo struct {
+type RefreshTokenRepoGormImpl struct {
 	charminder.BaseDao
 }
 
-func NewRefreshTokenGORMRepo(dao charminder.BaseDao) RefreshTokenGORMRepo {
-	return RefreshTokenGORMRepo{
+func NewRefreshTokenRepoGormImpl(dao charminder.BaseDao) RefreshTokenRepoGormImpl {
+	return RefreshTokenRepoGormImpl{
 		dao,
 	}
 }
 
-func (rtgr *RefreshTokenGORMRepo) Logout(ctx context.Context, token string) error {
+func (rtgr *RefreshTokenRepoGormImpl) Logout(ctx context.Context, token string) error {
 	if err := rtgr.GetDb().Model(entity.RefreshToken{}).Where("token = ?", token).Update("status", core_v1.Status_inactive).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rtgr *RefreshTokenGORMRepo) GetCountByEntityIdToken(ctx context.Context, entityId string, token string) (int64, error) {
+func (rtgr *RefreshTokenRepoGormImpl) GetCountByEntityIdToken(ctx context.Context, entityId string, token string) (int64, error) {
 	var count int64
 	err := rtgr.GetDb().Model(entity.RefreshToken{}).Where("entity_id = ? and token = ? and status = ?", entityId, token, core_v1.Status_active).Count(&count).Error
 	if err != nil {

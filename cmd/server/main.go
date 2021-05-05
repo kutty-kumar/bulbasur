@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	_ "flag"
 	"fmt"
-	"google.golang.org/grpc"
 	"log"
 	"net"
 	"net/http"
@@ -25,8 +24,10 @@ import (
 	"github.com/kutty-kumar/ho_oh/bulbasur_v1"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	_ "github.com/spf13/viper/remote"
+	"google.golang.org/grpc"
 )
 
 var (
@@ -121,7 +122,6 @@ func ServeExternal(logger *logrus.Logger) error {
 		logger.Fatalln(err)
 	}
 	grpcPrometheus.Register(grpcServer)
-
 	s, err := server.NewServer(
 		server.WithGrpcServer(grpcServer),
 		server.WithGateway(
@@ -155,6 +155,7 @@ func ServeExternal(logger *logrus.Logger) error {
 	return s.Serve(grpcL, httpL)
 }
 
+/*
 func init() {
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
@@ -166,6 +167,26 @@ func init() {
 	err = viper.ReadRemoteConfig()
 	if err != nil {
 		log.Fatalf("An error %v occurred while reading config", err)
+	}
+	resource.RegisterApplication(viper.GetString("app.id"))
+	resource.SetPlural()
+}
+*/
+
+func init() {
+	pflag.Parse()
+	viper.BindPFlags(pflag.CommandLine)
+	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AddConfigPath(viper.GetString("config.source"))
+	if viper.GetString("config.file") != "" {
+		log.Printf("Serving from configuration file: %s", viper.GetString("config.file"))
+		viper.SetConfigName(viper.GetString("config.file"))
+		if err := viper.ReadInConfig(); err != nil {
+			log.Fatalf("cannot load configuration: %v", err)
+		}
+	} else {
+		log.Printf("Serving from default values, environment variables, and/or flags")
 	}
 	resource.RegisterApplication(viper.GetString("app.id"))
 	resource.SetPlural()

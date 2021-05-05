@@ -1,51 +1,45 @@
 app:
   id: bulbasur
-server:
+
+server_config:
   address: 0.0.0.0
-  port: 9090
-gateway:
-  enable: true
-  address: 0.0.0.0
-  port: 8080
-  endpoint: /bulbasur/v1/
-  swaggerFile: ./www/service.swagger.json
+  port: 9123
+  gateway_enable: true
+  gateway_address: 0.0.0.0
+  gateway_url: /bulbasur/
+  gateway_port: 9124
+  internal_enable: true
+  internal_address: 0.0.0.0
+  internal_port: 9125
+  internal_health: /healthz
+  internal_readiness: /ready
+  swagger_path: ./www/service.swagger.json
+
 database:
   enable: true
-  dsn:
-  type: postgres
+  dsn: "root:@(localhost:3306)/bulbasur?parseTime=true"
+  type: mysql
   address: 0.0.0.0
-  port: 5432
+  port: 3306
   name: bulbasur
-  user: postgres
-  password: postgres
+  user: root
+  password:
   ssl: disable
   option:
-atlas.pubsub:
-  enable: false
-  address: atlas.pubsub
-  port: 5555
-  publish: topic
-  subscribe: topic
-atlas.authz:
-  enable: false
-  address: themis.authz
-  port: 5555
-atlas.audit:
-  enable: false
-  address: atlas.audit
-  port: 5555
-atlas.tagging:
-  enable: false
-  address: atlas.tagging
-  port: 5555
-internal:
-  enable: true
-  address: 0.0.0.0
-  port: 8081
-  health: /healthz
-  readiness: /ready
+
 config:
   source: deploy
   secret.file:
+
 logging:
   level: debug
+
+user_service:
+  server_address: 0.0.0.0
+  server_port: 8123
+
+jwt_config:
+  secret_key: "06f7fa64b69f655d"
+  cipher_text: "06f7fa64b69f655d"
+  refresh_token_expiry_duration_in_hours: 8760
+  access_token_expiry_duration_in_hours: 4
