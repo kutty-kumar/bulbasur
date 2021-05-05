@@ -2,17 +2,16 @@ package svc
 
 import (
 	"bulbasur/pkg/domain/entity"
-	"bulbasur/pkg/helper"
 	"bulbasur/pkg/repo"
 	"context"
 	"errors"
-
+	"github.com/kutty-kumar/charminder/pkg/util"
 	"github.com/kutty-kumar/ho_oh/bulbasur_v1"
 	"github.com/kutty-kumar/ho_oh/core_v1"
+	"github.com/spf13/viper"
 )
 
 type AuthTokenSvc struct {
-	authHelper       helper.AuthHelper
 	refreshTokenRepo repo.RefreshTokenRepo
 	userSvc          BaseUserSvc
 }
@@ -20,22 +19,21 @@ type AuthTokenSvc struct {
 func NewAuthTokenSvc(refreshTokenRepo repo.RefreshTokenRepo, userSvc BaseUserSvc) AuthTokenSvc {
 	return AuthTokenSvc{
 		refreshTokenRepo: refreshTokenRepo,
-		authHelper:       helper.AuthHelper{},
 		userSvc:          userSvc,
 	}
 }
 
 func (ats *AuthTokenSvc) Login(ctx context.Context, req *bulbasur_v1.LoginRequest) (*bulbasur_v1.LoginResponse, error) {
 	var resp bulbasur_v1.LoginResponse
-	user, err := ats.userSvc.GetUserByEmailPassword(req.Email, req.Password)
+	user, err := ats.userSvc.GetUserByEmailPassword(ctx, req.Email, req.Password)
 	if err != nil {
 		return nil, errors.New("invalid credentials")
 	}
-	keyPair, err := ats.authHelper.GenerateAccessRefreshKeyPair(user.ExternalId)
+	keyPair, err := util.GenerateAccessRefreshKeyPair(viper.GetString("jwt_config.access_token_expiry"), viper.GetString("jwt_config.refresh_token_expiry"), viper.GetString("jwt_config.secret_key"), user.ExternalId)
 	if err != nil {
 		return nil, errors.New("error in generating tokens")
 	}
-	encodedRefreshToken, err := ats.authHelper.EncryptAES(keyPair["refresh_token"])
+	encodedRefreshToken, err := util.EncryptAES(viper.GetString("jwt_config.cipher_key"), keyPair["refresh_token"])
 	if err != nil {
 		return nil, errors.New("error in generating tokens")
 	}
@@ -48,13 +46,13 @@ func (ats *AuthTokenSvc) Login(ctx context.Context, req *bulbasur_v1.LoginReques
 	refreshToken := entity.RefreshToken{}
 	refreshToken.FillProperties(*resp.Response)
 	refreshToken.Token = encodedRefreshToken
-	ats.refreshTokenRepo.Create(ctx, &refreshToken)
+	err, _ = ats.refreshTokenRepo.Create(ctx, &refreshToken)
 	return &resp, nil
 }
 
 func (ats *AuthTokenSvc) Logout(ctx context.Context, req *bulbasur_v1.LogoutRequest) (*bulbasur_v1.LogoutResponse, error) {
 	var resp bulbasur_v1.LogoutResponse
-	encodedRefreshToken, err := ats.authHelper.EncryptAES(req.RefreshToken)
+	encodedRefreshToken, err := util.EncryptAES(viper.GetString("jwt_config.cipher_key"), req.RefreshToken)
 	if err != nil {
 		return nil, errors.New("invalid refresh token")
 	}
@@ -68,18 +66,18 @@ func (ats *AuthTokenSvc) Logout(ctx context.Context, req *bulbasur_v1.LogoutRequ
 
 func (ats *AuthTokenSvc) RefreshToken(ctx context.Context, req *bulbasur_v1.RefreshTokenRequest) (*bulbasur_v1.RefreshTokenResponse, error) {
 	var resp bulbasur_v1.RefreshTokenResponse
-	claims, valid := ats.authHelper.ValidateTokenExpiry(req.RefreshToken)
+	claims, valid := util.ValidateTokenExpiry(viper.GetString("jwt_config.secret_key"), req.RefreshToken)
 	if !valid {
 		return nil, errors.New("refresh token expired")
 	}
-	encodedRefreshToken, err := ats.authHelper.EncryptAES(req.RefreshToken)
+	encodedRefreshToken, err := util.EncryptAES(viper.GetString("jwt_config.cipher_key"), req.RefreshToken)
 	if err != nil {
 		return nil, errors.New("login required")
 	}
-	if count, err := ats.refreshTokenRepo.GetCountByEntityIdToken(ctx, claims.EntityId, encodedRefreshToken); err != nil || count < 1 {
+	if count, err := ats.refreshTokenRepo.GetCountByEntityIdToken(ctx, claims.UserId, encodedRefreshToken); err != nil || count < 1 {
 		return nil, errors.New("login required")
 	}
-	keyPair, err := ats.authHelper.GenerateAccessRefreshKeyPair(claims.EntityId)
+	keyPair, err := util.GenerateAccessRefreshKeyPair(viper.GetString("jwt_config.access_token_expiry"), viper.GetString("jwt_config.refresh_token_expiry"), viper.GetString("jwt_config.secret_key"), claims.UserId)
 	if err != nil {
 		return nil, errors.New("error in generating tokens")
 	}

@@ -1,12 +1,12 @@
 package svc
 
 import (
-	"github.com/google/uuid"
+	"context"
 	"github.com/kutty-kumar/ho_oh/pikachu_v1"
 )
 
 type BaseUserSvc interface {
-	GetUserByEmailPassword(email string, password string) (pikachu_v1.UserDto, error)
+	GetUserByEmailPassword(ctx context.Context, email string, password string) (*pikachu_v1.UserDto, error)
 }
 
 func NewUserSvc(client pikachu_v1.UserServiceClient) BaseUserSvc {
@@ -19,12 +19,10 @@ type UserSvc struct {
 	pikachu_v1.UserServiceClient
 }
 
-func (us *UserSvc) GetUserByEmailPassword(email string, password string) (pikachu_v1.UserDto, error) {
-	var user pikachu_v1.UserDto
-	user = pikachu_v1.UserDto{
-		ExternalId: uuid.New().String(),
-		FirstName:  "firstName",
-		LastName:   "lastName",
+func (us *UserSvc) GetUserByEmailPassword(ctx context.Context, email string, password string) (*pikachu_v1.UserDto, error) {
+	resp, err := us.UserServiceClient.GetUserByEmailAndPassword(ctx, &pikachu_v1.GetUserByEmailAndPasswordRequest{Email: email, Password: password})
+	if err != nil {
+		return nil, err
 	}
-	return user, nil
+	return resp.Response, nil
 }

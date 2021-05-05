@@ -6,6 +6,7 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
+	"github.com/golang/protobuf/proto"
 
 	"github.com/kutty-kumar/charminder/pkg"
 	charminder "github.com/kutty-kumar/charminder/pkg"
@@ -17,6 +18,21 @@ type RefreshToken struct {
 	charminder.BaseDomain
 	Token    string `gorm:"unique,varchar(512)"`
 	EntityId string `gorm:"index"`
+}
+
+func (r *RefreshToken) MarshalBinary() ([]byte, error) {
+	dto := r.ToDto().(bulbasur_v1.AuthTokenDto)
+	return proto.Marshal(&dto)
+}
+
+func (r *RefreshToken) UnmarshalBinary(buffer []byte) error {
+	dto := bulbasur_v1.AuthTokenDto{}
+	err := proto.Unmarshal(buffer, &dto)
+	if err != nil {
+		return err
+	}
+	r.FillProperties(dto)
+	return nil
 }
 
 func (r *RefreshToken) ToBytes() (*bytes.Buffer, error) {

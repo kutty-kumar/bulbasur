@@ -113,7 +113,7 @@ func ServeExternal(logger *logrus.Logger) error {
 	if viper.GetString("database_config.dsn") == "" {
 		setDBConnection()
 	}
-	userSvcConn, err := grpc.Dial(fmt.Sprintf("%v:%v", viper.GetString("user_service.server_address"), viper.GetString("user_service.server_port")), grpc.WithInsecure())
+	userSvcConn, err := grpc.Dial(fmt.Sprintf("%v:%v", viper.GetString("user_service_config.server_address"), viper.GetString("user_service_config.server_port")), grpc.WithInsecure())
 	defer userSvcConn.Close()
 
 	grpcServer, err := NewGRPCServer(logger, userSvcConn)
