@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	_ "flag"
 	"fmt"
-	"github.com/kutty-kumar/ho_oh/ditto_v1"
+	"github.com/kutty-kumar/ho_oh/bulbasur_v1"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -53,7 +53,7 @@ func main() {
 func newGateway(ctx context.Context) (http.Handler, error) {
 	opts := []grpc.DialOption{grpc.WithInsecure()}
 	gwMux := runtime.NewServeMux()
-	if err := ditto_v1.RegisterPrinterServiceHandlerFromEndpoint(ctx, gwMux, fmt.Sprintf("%v:%v", viper.GetString("server_config.address"), viper.GetString("server_config.port")), opts); err != nil {
+	if err := bulbasur_v1.RegisterAuthServiceHandlerFromEndpoint(ctx, gwMux, fmt.Sprintf("%v:%v", viper.GetString("server_config.address"), viper.GetString("server_config.port")), opts); err != nil {
 		return nil, err
 	}
 	return gwMux, nil
