@@ -121,7 +121,6 @@ func ServeExternal(logger *logrus.Logger) error {
 		logger.Fatalln(err)
 	}
 	grpcPrometheus.Register(grpcServer)
-
 	s, err := server.NewServer(
 		server.WithGrpcServer(grpcServer),
 		server.WithGateway(
@@ -129,6 +128,7 @@ func ServeExternal(logger *logrus.Logger) error {
 				runtime.WithForwardResponseOption(forwardResponseOption),
 				runtime.WithIncomingHeaderMatcher(gateway.ExtendedDefaultHeaderMatcher(
 					requestid.DefaultRequestIDKey)),
+				runtime.WithProtoErrorHandler(defaultProtoErrorHandler),
 			),
 			gateway.WithServerAddress(fmt.Sprintf("%s:%s", viper.GetString("server_config.address"), viper.GetString("server_config.port"))),
 			gateway.WithEndpointRegistration(viper.GetString("server_config.gateway_url"), bulbasur_v1.RegisterAuthServiceHandlerFromEndpoint),
@@ -177,6 +177,13 @@ func forwardResponseOption(ctx context.Context, w http.ResponseWriter, resp prot
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	return nil
+}
+
+func defaultProtoErrorHandler(ctx context.Context, sMux *runtime.ServeMux, marshaller runtime.Marshaler, w http.ResponseWriter, r *http.Request, e error) {
+	w.Header().Set("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, HEAD, OPTIONS, PATCH")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func dbReady() error {

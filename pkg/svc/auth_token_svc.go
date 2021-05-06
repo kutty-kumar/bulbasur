@@ -27,7 +27,7 @@ func (ats *AuthTokenSvc) Login(ctx context.Context, req *bulbasur_v1.LoginReques
 	var resp bulbasur_v1.LoginResponse
 	user, err := ats.userSvc.GetUserByEmailPassword(ctx, req.Email, req.Password)
 	if err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, errors.New("user not found")
 	}
 	keyPair, err := util.GenerateAccessRefreshKeyPair(viper.GetString("jwt_config.access_token_expiry"), viper.GetString("jwt_config.refresh_token_expiry"), viper.GetString("jwt_config.secret_key"), user.ExternalId)
 	if err != nil {
